@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 20 10:38:47 2021
-
-@author: H.Mohammadhosseini
+@author: Jupihes
 """
 import requests
 from bs4 import BeautifulSoup
@@ -10,8 +8,6 @@ import re
 from pandas import DataFrame
  
 url = 'https://divar.ir/s/tehran'#'https://divar.ir/s/tehran/vehicles'
-
-#https://divar.ir/s/tehran/rent-apartment/khani-abad?size=-65&elevator=true&parking=true
 
 webpage = requests.get(url)
 
@@ -30,7 +26,6 @@ soup = BeautifulSoup(webpage.text, 'html.parser')
 #     #if re.findall(r'توافقی',tag) != []:
 #     print(tag.name, tag.attrs, tag.text)
 #     input()
-
 
 results = soup.find_all('div',"kt-post-card__body")
 
@@ -63,9 +58,9 @@ for tag in results:
         #print(temp_txt.split(','))
         temp_list.append(temp_txt)
 
-# df = DataFrame(temp_list,columns=['header'])
-# df.to_csv('sample_output.csv',index= False, encoding="utf8")
-# =============================================================================
+df = DataFrame(temp_list,columns=['header'])
+df.to_csv('sample_output.csv',index= False, encoding="utf8")
+
 
 # ###########################################################
 # # https://beautiful-soup-4.readthedocs.io/en/latest/index.html?highlight=find_all#find-all
