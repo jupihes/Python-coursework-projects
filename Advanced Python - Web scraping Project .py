@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec 19 12:38:30 2021
-
-@author: H.Mohammadhosseini
+@author: Jupihes
 """
 import requests
 from bs4 import BeautifulSoup
 import re
-#from pandas import DataFrame
- 
-url = 'https://www.truecar.com/used-cars-for-sale/listings/cadillac/ats/year-2016-max/?trim=standard'#'https://divar.ir/s/tehran'#'https://divar.ir/s/tehran/vehicles'
+
+url = 'https://www.truecar.com/used-cars-for-sale/listings/cadillac/ats/year-2016-max/?trim=standard'
 
 webpage = requests.get(url)
-
 soup = BeautifulSoup(webpage.text, 'html.parser')
-#del webpage
-
-
+del webpage
 
 # results = soup.find_all('div')#('div.kt-post-card__body')
 # for tag in soup.find_all('a'):
@@ -25,12 +19,6 @@ soup = BeautifulSoup(webpage.text, 'html.parser')
 # results = soup.find_all('a')
 # # for item in results:
 # #     class="kt-post-card kt-post-card--outlined"
-
-# results = soup.find_all('div',"kt-post-card__body")#"kt-post-card kt-post-card--outlined")#
-# for tag in results:
-#     #if re.findall(r'توافقی',tag) != []:
-#     print(tag.name, tag.attrs, tag.text)
-#     input()
 
 
 #results = soup.find_all('div',"vehicleCardPricingBlockPrice")
@@ -68,7 +56,6 @@ year_model = re.findall(r'([Sponsored?]\d{4}) Cadillac ATS', sample_text)
 
 results = soup.find_all('div',"card-content vehicle-card-body order-3")
 
-
 number_list = []
 for tag in results:
     # for i in tag.findChildren('div',"heading-3 margin-y-1 font-weight-bold"):
@@ -81,44 +68,42 @@ for tag in results:
         print(numbers[0][0], numbers[0][3])
         number_list.append([numbers[0][0].replace('$','').replace(',',''), numbers[0][3].replace(' miles','').replace(',','')])
 
-
-
-
-############## Writing to DB #####################
+##############     Writing to DB     ##############
 import mysql.connector
 
-cnx = mysql.connector.connect(user='root',password='bahram1024', database='learndb')
+cnx = mysql.connector.connect(user='...',password='...', database='learndb')
 cursor = cnx.cursor()
 
-# ==================         Table creation         ===========================
-# 
+##############     Table creation     ##############
+#  
 # query = ('''CREATE TABLE truecar_table (record_num  int, price int, miles int)''')
 # 
 # cursor.execute(query)
 # 
-# =============================================================================
+####################################################
 
+##############     INSERT into DB     ##############
 
 add_record = ("INSERT INTO truecar_table "
                "(record_num, price, miles) "
                "VALUES (%s, %s, %s)")
 
-for n,item in enumerate(number_list[:20]):
+for n,item in enumerate(number_list):
     #print(n, int(item[0]), int(item[1]))
     data_record = (int(n+1), int(item[0]), int(item[1]))
-    #print(data_record)
-    # Insert new record
+    # print(data_record)
+    ####### Insert new record
     cursor.execute(add_record, data_record)
     
 cnx.commit()
 
 # print('Here is what we have in table:\n')
 # select_query = ('''SELECT * 
-#                 FROM emails''')
+#                 FROM truecar_table''')
 # cursor.execute(select_query)
-# for (email, password) in cursor:
-#   print("{}, {} ".format(
-#     email, password))
+# for (record_num, price, miles) in cursor:
+#   print("{}, {}, {}".format(
+#     record_num, price, miles))
 
 cursor.close()
 cnx.close()
