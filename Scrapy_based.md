@@ -136,3 +136,104 @@ class DivarSpider(scrapy.Spider):
 5. **Data Yielding**: Yields a dictionary for each listing containing the cleaned text, URL, and its hash, which Scrapy automatically writes to the CSV file.
 
 This approach ensures efficient and maintainable scraping with proper handling of pagination and rate limits, leveraging Scrapy's capabilities for robust web scraping.
+
+
+
+### revised
+
+
+### Answer
+Here's how to parameterize and call the spider with different configurations, along with execution examples:
+
+```python
+import scrapy
+from scrapy import Request
+from hashlib import sha256
+import re
+
+class DivarSpider(scrapy.Spider):
+    name = "divar_apartment"
+    allowed_domains = ["divar.ir"]
+    
+    def __init__(self, base_url=None, query_params=None, pages=22, output_file=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set defaults if not provided
+        self.base_url = base_url or "https://divar.ir/s/nasimshahr/buy-apartment"
+        self.query_params = query_params or "price=750000000-1300000000&sort=sort_date"
+        self.pages = int(pages)
+        
+        # Configure dynamic output filename
+        self.custom_settings = {
+            "CONCURRENT_REQUESTS": 1,
+            "DOWNLOAD_DELAY": 8.57,
+            "FEED_EXPORT_ENCODING": "utf-8",
+            "FEED_FORMAT": "csv",
+            "FEED_URI": output_file or self._generate_filename(),
+        }
+
+    def _generate_filename(self):
+        """Generate filename from URL parameters"""
+        clean_path = self.base_url.split("/s/")[-1].replace("/", "_")
+        clean_query = self.query_params.split("&")[0].replace("=", "-")
+        return f"Divar_{clean_path}_{clean_query}.csv"
+
+    def start_requests(self):
+        start_url = f"{self.base_url}?{self.query_params}"
+        for page in range(1, self.pages + 1):
+            yield Request(
+                url=f"{start_url}&page={page}" if page > 1 else start_url,
+                callback=self.parse
+            )
+
+    def parse(self, response):
+        # ... (same parsing logic as original code) ...
+```
+
+**Sample Execution Commands:**
+
+1. **Basic usage with default parameters:**
+```bash
+scrapy crawl divar_apartment
+```
+
+2. **Custom location and price range:**
+```bash
+scrapy crawl divar_apartment \
+  -a base_url="https://divar.ir/s/tehran/buy-apartment" \
+  -a query_params="price=500000000-1000000000&sort=sort_date" \
+  -a pages=10 \
+  -a output_file="tehran_affordable.csv"
+```
+
+3. **Different city and custom pages:**
+```bash
+scrapy crawl divar_apartment \
+  -a base_url="https://divar.ir/s/karaj/buy-apartment" \
+  -a pages=5 \
+  -o karaj_listings.csv
+```
+
+4. **Commercial properties instead of apartments:**
+```bash
+scrapy crawl divar_apartment \
+  -a base_url="https://divar.ir/s/isfahan/commercial-properties" \
+  -a query_params="sort=sort_date" \
+  -a pages=15 \
+  -o isfahan_commercial.csv
+```
+
+**Key Parameters:**
+- `base_url`: The main URL path (e.g., `/tehran/buy-apartment`)
+- `query_params`: Filter parameters (price ranges, sorting, etc.)
+- `pages`: Number of pages to scrape (default: 22)
+- `output_file`: Custom output filename (optional)
+
+**Rate Limiting Note:** The spider maintains the 7-requests-per-minute limit through the `DOWNLOAD_DELAY` setting. Adjust if the website's policy changes.
+
+This parameterized version allows for easy customization of:
+- Target location/property type via `base_url`
+- Price filters and sorting via `query_params`
+- Pagination depth through `pages`
+- Output file naming convention
+
+The spider will automatically generate meaningful filenames based on the parameters if no custom output filename is specified.
